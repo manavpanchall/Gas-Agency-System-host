@@ -71,4 +71,23 @@ router.post('/addcylinder', async (req, res) => {
     }
 });
 
+// Delete cylinder endpoint
+router.post('/deletecylinder', async (req, res) => {
+    const { cylinderid } = req.body;
+
+    try {
+        const deletedCylinder = await Cylinder.findByIdAndDelete(cylinderid);
+        if (!deletedCylinder) {
+            return res.status(404).json({ message: 'Cylinder not found' });
+        }
+        res.json({ success: true, message: 'Cylinder deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting cylinder:', error);
+        res.status(500).json({
+            message: 'Failed to delete cylinder',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router;

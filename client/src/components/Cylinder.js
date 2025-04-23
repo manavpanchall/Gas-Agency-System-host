@@ -1,50 +1,55 @@
 import React, { useState } from 'react';
-import { Modal, Button, Carousel } from 'react-bootstrap';
+import { Modal, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import { FaEye } from 'react-icons/fa';
 
 function Cylinder({ cylinder }) {
     const [show, setShow] = useState(false);
 
     const handleClose = () => setShow(false);
     const handleShow = () => setShow(true);
+
     return (
-        <div className='row-bs bs'>
+        <div className="row mb-4">
             <div className="col-md-4">
-                <img src={cylinder.imageurls[0]} className='smallimg' alt={cylinder.name} />
+                <img src={cylinder.imageurls[0]} className="img-fluid rounded" alt={cylinder.name} />
             </div>
             <div className="col-md-8">
-                <h1>{cylinder.name}</h1>
-                <b>
-                    <p>Price : {cylinder.price}</p>
-                    <p>Weight : {cylinder.weight}</p>
-                    <p>Bodyweight : {cylinder.bodyweight}</p>
-                    <p>Type : {cylinder.type}</p>
-                </b>
+                <h3>{cylinder.name}</h3>
+                <div className="mb-3">
+                    <p><strong>Price:</strong> ₹{cylinder.price}</p>
+                    <p><strong>Weight:</strong> {cylinder.weight}</p>
+                    <p><strong>Body Weight:</strong> {cylinder.bodyweight}</p>
+                    <p><strong>Type:</strong> {cylinder.type}</p>
+                </div>
 
-                <div style={{ float: 'right' }}>
-                    <Link to={`/book/${cylinder._id}`}>  {/* Correct interpolation here */}
-                        <Button className='btn btn-primary m-2'>Book Now</Button>
+                <div className="d-flex gap-2">
+                    <Link to={`/book/${cylinder._id}`} className="btn btn-primary">
+                        Book Now
                     </Link>
-                    <button className="btn btn-primary" onClick={handleShow}>View details</button>
+                    <Button variant="outline-primary" onClick={handleShow}>
+                        <FaEye className="me-1" /> View Details
+                    </Button>
                 </div>
             </div>
 
-            <Modal show={show} onHide={handleClose} size='md'>
-                <Modal.Header>
+            {/* Image Modal */}
+            <Modal show={show} onHide={handleClose} size="lg">
+                <Modal.Header closeButton>
                     <Modal.Title>{cylinder.name}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <Carousel prevLabel='' nextLabel=''>
-                        {cylinder.imageurls.map(url => (
-                            <Carousel.Item key={url}>
-                                <img className="d-block w-100" src={url} alt="Cylinder image" />
-                            </Carousel.Item>
-                        ))}
-                    </Carousel>
+                    <img 
+                        src={cylinder.imageurls[0]} 
+                        className="img-fluid w-100 mb-3" 
+                        alt={cylinder.name} 
+                    />
                     <p>{cylinder.description}</p>
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="secondary" onClick={handleClose}>Close</Button>
+                    <Button variant="secondary" onClick={handleClose}>
+                        Close
+                    </Button>
                 </Modal.Footer>
             </Modal>
         </div>

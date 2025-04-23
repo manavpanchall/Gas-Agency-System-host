@@ -67,10 +67,47 @@ router.post('/getbookingsbyuserid', async (req, res) => {
         res.json(formattedBookings);
     } catch (error) {
         console.error('Bookings fetch error:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
             message: 'Server error',
-            error: error.message 
+            error: error.message
+        });
+    }
+});
+
+
+
+// Add this to your existing bookingsRoute.js
+router.post('/cancelbooking', async (req, res) => {
+    const { bookingId } = req.body;
+
+    try {
+        const booking = await Booking.findById(bookingId);
+
+        if (!booking) {
+            return res.status(404).json({ success: false, message: 'Booking not found' });
+        }
+
+        // Check if booking is already cancelled
+        if (booking.status === 'cancelled') {
+            return res.status(400).json({ success: false, message: 'Booking is already cancelled' });
+        }
+
+        // Update booking status
+        booking.status = 'cancelled';
+        await booking.save();
+
+        res.json({
+            success: true,
+            message: 'Booking cancelled successfully',
+            updatedBooking: booking
+        });
+    } catch (error) {
+        console.error('Error cancelling booking:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to cancel booking',
+            error: error.message
         });
     }
 });

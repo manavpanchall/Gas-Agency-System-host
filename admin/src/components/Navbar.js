@@ -1,16 +1,31 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function Navbar() {
     const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem('currentUser'));
+    const [user, setUser] = useState(null);
+
+    useEffect(() => {
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        setUser(currentUser);
+
+        const handleStorageChange = () => {
+            const updatedUser = JSON.parse(localStorage.getItem('currentUser'));
+            setUser(updatedUser);
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
 
     function logout() {
         localStorage.removeItem('currentUser');
+        window.dispatchEvent(new Event('storage'));
         navigate('/admin/login');
     }
 
-    function handleAdminPanelClick() {
+    function handleAdminPanelClick(e) {
+        e.preventDefault();
         if (!user) {
             navigate('/admin/login');
         } else {
@@ -18,9 +33,9 @@ function Navbar() {
         }
     }
 
-    function handleProfileClick() {
-        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-        if (currentUser && currentUser.isAdmin) {
+    function handleProfileClick(e) {
+        e.preventDefault();
+        if (user?.isAdmin) {
             navigate('/admin/profile');
         } else {
             navigate('/admin/login');
@@ -30,42 +45,50 @@ function Navbar() {
     return (
         <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
             <div className="container-fluid">
-                <a className="navbar-brand" href="#" onClick={handleAdminPanelClick}>
+                <a className="navbar-brand" href="#" onClick={handleAdminPanelClick} style={{ cursor: 'pointer' }}>
                     Admin Panel
                 </a>
                 <button
                     className="navbar-toggler"
                     type="button"
                     data-bs-toggle="collapse"
-                    data-bs-target="#navbarNav"
-                    aria-controls="navbarNav"
+                    data-bs-target="#navbarNavDropdown"
+                    aria-controls="navbarNavDropdown"
                     aria-expanded="false"
                     aria-label="Toggle navigation"
                 >
                     <span className="navbar-toggler-icon"></span>
                 </button>
-                <div className="collapse navbar-collapse" id="navbarNav">
+                <div className="collapse navbar-collapse" id="navbarNavDropdown">
                     <ul className="navbar-nav ms-auto">
                         {user ? (
                             <li className="nav-item dropdown">
                                 <a
                                     className="nav-link dropdown-toggle"
                                     href="#"
-                                    id="navbarDropdown"
+                                    id="navbarDropdownMenuLink"
                                     role="button"
                                     data-bs-toggle="dropdown"
                                     aria-expanded="false"
                                 >
-                                    <i className="fas fa-user"></i> {user.name}
+                                    <i className="fas fa-user me-1"></i> {user.name}
                                 </a>
-                                <ul className="dropdown-menu" aria-labelledby="navbarDropdown">
+                                <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdownMenuLink">
                                     <li>
-                                        <button className="dropdown-item" onClick={handleProfileClick}>
+                                        <button 
+                                            className="dropdown-item" 
+                                            onClick={handleProfileClick}
+                                            style={{ cursor: 'pointer' }}
+                                        >
                                             Profile
                                         </button>
                                     </li>
                                     <li>
-                                        <button className="dropdown-item" onClick={logout}>
+                                        <button 
+                                            className="dropdown-item" 
+                                            onClick={logout}
+                                            style={{ cursor: 'pointer' }}
+                                        >
                                             Logout
                                         </button>
                                     </li>

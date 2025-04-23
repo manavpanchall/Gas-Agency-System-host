@@ -1,94 +1,170 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Cylinder from '../components/Cylinder';
+import { Link } from 'react-router-dom';
 import Loader from '../components/Loader';
 import Error from '../components/Error';
+import { FaSearch, FaFilter, FaEye } from 'react-icons/fa';
+import { Modal, Button } from 'react-bootstrap';
 
 function Homescreen() {
-
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(false);
     const [cylinders, setCylinders] = useState([]);
-    const [originalCylinders, setOriginalCylinders] = useState([]);
-    const [searchkey, setSearchkey] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [searchKey, setSearchKey] = useState('');
     const [type, setType] = useState('all');
+    const [showFilters, setShowFilters] = useState(false);
+    const [showImageModal, setShowImageModal] = useState(false);
+    const [selectedCylinder, setSelectedCylinder] = useState(null);
 
     useEffect(() => {
-        const fetchData = async () => {
+        const fetchCylinders = async () => {
             try {
-                setLoading(true);
-                const { data } = await axios.get('/api/cylinders/getallcylinders', {
-                    validateStatus: (status) => status < 500
-                });
+                const { data } = await axios.get('/api/cylinders/getallcylinders');
                 setCylinders(data);
-                setOriginalCylinders(data);
                 setLoading(false);
-            } catch (error) {
-                console.error('Error fetching cylinders:', error.response ? error.response.data : error.message);
-                setError(true);
+            } catch (err) {
+                setError(err.message);
                 setLoading(false);
             }
         };
-        fetchData();
+        fetchCylinders();
     }, []);
 
-    function filterBySearch() {
-        if (searchkey.trim() === "") {
-            setCylinders(originalCylinders); // Reset to original list if search key is empty
-        } else {
-            const tempCylinders = originalCylinders.filter(cylinder =>
-                cylinder.name.toLowerCase().includes(searchkey.toLowerCase())
-            );
-            setCylinders(tempCylinders);
-        }
-    }
+    const filteredCylinders = cylinders.filter(cylinder => {
+        const matchesSearch = cylinder.name.toLowerCase().includes(searchKey.toLowerCase());
+        const matchesType = type === 'all' || cylinder.type.toLowerCase() === type.toLowerCase();
+        return matchesSearch && matchesType;
+    });
 
-    function filterByType(selectedType) {
-        setType(selectedType); // Update the type state
-        if (selectedType !== 'all') {
-            const tempCylinders = originalCylinders.filter(cylinder => cylinder.type.toLowerCase() === selectedType.toLowerCase());
-            setCylinders(tempCylinders);
-        } else {
-            setCylinders(originalCylinders);
-        }
-    }
-
+    const handleViewImages = (cylinder) => {
+        setSelectedCylinder(cylinder);
+        setShowImageModal(true);
+    };
 
     return (
-        <div className="container">
-            <div className='row mt-5 bs'>
-                <div className='col md-5'>
-                    <input
-                        type="text"
-                        className="form-control"
-                        placeholder="Search cylinders"
-                        value={searchkey}
-                        onChange={(e) => { setSearchkey(e.target.value) }}
-                        onKeyUp={filterBySearch}
-                    />
+        <div className="container py-5">
+            {/* Image View Modal */}
+            <Modal show={showImageModal} onHide={() => setShowImageModal(false)} size="lg">
+                <Modal.Header closeButton>
+                    <Modal.Title>{selectedCylinder?.name} Images</Modal.Title>
+                </Modal.Header>
+                <Modal.Body className="text-center">
+                    {selectedCylinder?.imageurls?.map((image, index) => (
+                        <img 
+                            key={index}
+                            src={image} 
+                            className="img-fluid mb-3 rounded"
+                            alt={`${selectedCylinder?.name} - Image ${index + 1}`}
+                            style={{ maxHeight: '400px', width: 'auto' }}
+                        />
+                    ))}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowImageModal(false)}>
+                        Close
+                    </Button>
+                </Modal.Footer>
+            </Modal>
 
+            <div className="row mb-4">
+                <div className="col-md-8">
+                    <div className="input-group">
+                        <span className="input-group-text">
+                            <FaSearch />
+                        </span>
+                        <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search cylinders..."
+                            value={searchKey}
+                            onChange={(e) => setSearchKey(e.target.value)}
+                        />
+                    </div>
                 </div>
-                <div className='col-md-5'>
-                    <select className='form-control' value={type} onChange={(e) => { filterByType(e.target.value) }}>
-                        <option value="all">All</option>
-                        <option value="small">Small</option>
-                        <option value="large">Large</option>
-                    </select>
+                <div className="col-md-4">
+                    <button 
+                        className="btn btn-outline-primary w-100"
+                        onClick={() => setShowFilters(!showFilters)}
+                    >
+                        <FaFilter className="me-2" />
+                        Filters
+                    </button>
+                    
+                    {showFilters && (
+                        <div className="mt-2">
+                            <select 
+                                className="form-select"
+                                value={type}
+                                onChange={(e) => setType(e.target.value)}
+                            >
+                                <option value="all">All Types</option>
+                                <option value="small">Small</option>
+                                <option value="medium">Medium</option>
+                                <option value="large">Large</option>
+                            </select>
+                        </div>
+                    )}
                 </div>
             </div>
-            <div className="row justify-content-center mt-5">
-                {loading ? (
-                    <Loader />
-                ) : (
-                    cylinders.map((cylinder) => {
-                        return (
-                            <div className="col-md-9 mt-3" key={cylinder._id}>
-                                <Cylinder cylinder={cylinder} />
+
+            {loading ? (
+                <Loader />
+            ) : error ? (
+                <Error message={error} />
+            ) : (
+                <div className="row">
+                    {filteredCylinders.length > 0 ? (
+                        filteredCylinders.map(cylinder => (
+                            <div key={cylinder._id} className="col-md-6 col-lg-4 mb-4">
+                                <div className="card h-100">
+                                    <img 
+                                        src={cylinder.imageurls[0]} 
+                                        className="card-img-top"
+                                        alt={cylinder.name}
+                                        style={{ height: '200px', objectFit: 'cover' }}
+                                    />
+                                    <div className="card-body">
+                                        <h5 className="card-title">{cylinder.name}</h5>
+                                        <p className="card-text">
+                                            <strong>Type:</strong> {cylinder.type}<br />
+                                            <strong>Weight:</strong> {cylinder.weight}<br />
+                                            <strong>Price:</strong> ₹{cylinder.price}
+                                        </p>
+                                        <div className="d-flex gap-2 mt-auto">
+                                            <Link 
+                                                to={`/book/${cylinder._id}`}
+                                                className="btn btn-primary flex-grow-1"
+                                            >
+                                                Book Now
+                                            </Link>
+                                            <button 
+                                                className="btn btn-outline-primary"
+                                                onClick={() => handleViewImages(cylinder)}
+                                                style={{ minWidth: '40px' }}
+                                            >
+                                                <FaEye />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        );
-                    })
-                )}
-            </div>
+                        ))
+                    ) : (
+                        <div className="col-12 text-center py-5">
+                            <h4>No cylinders found matching your criteria</h4>
+                            <button 
+                                className="btn btn-link"
+                                onClick={() => {
+                                    setSearchKey('');
+                                    setType('all');
+                                }}
+                            >
+                                Clear filters
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 }

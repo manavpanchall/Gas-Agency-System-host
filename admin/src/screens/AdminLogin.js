@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Loader from '../components/Loader';
 import Error from '../components/Error';
+import Swal from 'sweetalert2';
 
 function AdminLogin() {
     const [email, setEmail] = useState('');
@@ -26,18 +27,20 @@ function AdminLogin() {
                 { email, password }
             );
 
-            if (response.data.success && response.data.user.isAdmin) {
-                localStorage.setItem('currentUser', JSON.stringify({
-                    name: response.data.user.name,
-                    email: response.data.user.email,
-                    isAdmin: response.data.user.isAdmin,
-                    _id: response.data.user._id
-                }));
-                navigate('/admin/dashboard');
+            if (response.data.success) {
+                if (response.data.user.isAdmin) {
+                    localStorage.setItem('currentUser', JSON.stringify(response.data.user));
+                    // Force state update by dispatching storage event
+                    window.dispatchEvent(new Event('storage'));
+                    navigate('/admin/dashboard');
+                } else {
+                    setError('You are not authorized as admin');
+                }
             } else {
-                setError('You are not authorized as admin');
+                setError(response.data.message || 'Login failed');
             }
         } catch (error) {
+            console.error('Login error:', error);
             setError(error.response?.data?.message || 'Login failed. Please try again.');
         } finally {
             setLoading(false);

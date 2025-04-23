@@ -6,15 +6,12 @@ const usersRoute = require('./routes/usersRoute');
 const bookingsRoute = require('./routes/bookingsRoute');
 const cylindersRoute = require('./routes/cylindersRoute');
 const paymentRoute = require('./routes/paymentRoute');
-const dotenv = require('dotenv');
-
-dotenv.config(); // Load environment variables
 
 const app = express();
 
 // Enhanced CORS Configuration
 app.use(cors({
-  origin: ['https://gas-agency-frontend.vercel.app', 'http://localhost:3000'],
+  origin: ['http://localhost:3000', 'http://localhost:3001'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true

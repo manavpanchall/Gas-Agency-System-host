@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Tabs, Tag } from 'antd';
+import { Tabs, Tag, message } from 'antd';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 
@@ -43,9 +43,7 @@ function Profilescreen() {
     );
 }
 
-export default Profilescreen;
-
-export function MyBookings({ user }) {
+function MyBookings({ user }) {
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -55,7 +53,9 @@ export function MyBookings({ user }) {
 
         async function fetchBookings() {
             try {
-                const response = await axios.post('/api/bookings/getbookingsbyuserid', { userid: user._id });
+                const response = await axios.post('/api/bookings/getbookingsbyuserid', { 
+                    userid: user._id 
+                });
                 if (isMounted) {
                     setBookings(response.data);
                 }
@@ -79,60 +79,66 @@ export function MyBookings({ user }) {
     const cancelBooking = async (bookingId) => {
         try {
             setLoading(true);
-            const response = await axios.post('/api/bookings/cancelbooking', { bookingId });
+            const result = await axios.post('/api/bookings/cancelbooking', { 
+                bookingId 
+            });
 
-            if (response.data.success) {
-                setBookings((prevBookings) =>
-                    prevBookings.map((booking) =>
+            if (result.data.success) {
+                setBookings(prevBookings =>
+                    prevBookings.map(booking =>
                         booking._id === bookingId ? { ...booking, status: 'cancelled' } : booking
                     )
                 );
-                Swal.fire('Success', 'Booking Cancelled Successfully', 'success');
+                Swal.fire('Success', 'Booking cancelled successfully', 'success');
             } else {
-                console.error('Failed to cancel booking:', response.data.message);
-                Swal.fire('Error', response.data.message, 'error');
+                Swal.fire('Error', result.data.message || 'Failed to cancel booking', 'error');
             }
         } catch (error) {
-            console.error('Error in cancelling booking:', error);
-            Swal.fire('Oops', 'Something went wrong', 'error');
+            console.error('Error cancelling booking:', error);
+            Swal.fire('Error', 'Failed to cancel booking. Please try again.', 'error');
         } finally {
             setLoading(false);
         }
     };
 
-    if (loading) return <div>Loading...</div>;
-    if (error) return <div>Error fetching bookings: {error.message}</div>;
+    if (loading) return <div className="text-center"><p>Loading bookings...</p></div>;
+    if (error) return <div className="alert alert-danger">Error loading bookings: {error.message}</div>;
 
     return (
         <div className='row'>
             {bookings.length > 0 ? (
                 bookings.map((booking) => (
                     <div className='col-md-6' key={booking._id}>
-                        <div className='booking-card bs'>
-                            <h1>{booking.cylinder}</h1>
-                            <p><b>BookingId:</b> {booking._id}</p>
+                        <div className='bs p-3 mb-3'>
+                            <h4>{booking.cylinder}</h4>
+                            <p><b>Booking ID:</b> {booking._id}</p>
+                            <p><b>Date:</b> {new Date(booking.createdAt).toLocaleString()}</p>
                             <p><b>Weight:</b> {booking.weight}</p>
-                            <p><b>Body Weight:</b> {booking.bodyweight}</p>
-                            <p><b>Total Amount:</b> {booking.totalAmount}</p>
-                            <p><b>Total Cylinder:</b> {booking.totalcylinder}</p>
-                            <p><b>Transaction Id:</b> {booking.transactionId}</p>
-                            <p>
-                                <b>Status:</b>{' '}
+                            <p><b>Total Amount:</b> ₹{booking.totalAmount}</p>
+                            <p><b>Status:</b> {' '}
                                 <Tag color={booking.status === 'cancelled' ? 'red' : 'green'}>
                                     {booking.status === 'cancelled' ? 'CANCELLED' : 'CONFIRMED'}
                                 </Tag>
                             </p>
                             {booking.status !== 'cancelled' && (
-                                <button className='btn btn-primary' onClick={() => cancelBooking(booking._id)}>
-                                    CANCEL BOOKING
+                                <button 
+                                    className='btn btn-danger'
+                                    onClick={() => cancelBooking(booking._id)}
+                                    disabled={loading}
+                                >
+                                    {loading ? 'Processing...' : 'CANCEL BOOKING'}
                                 </button>
                             )}
                         </div>
                     </div>
                 ))
             ) : (
-                <p>No bookings found.</p>
+                <div className="col-12 text-center">
+                    <p>No bookings found.</p>
+                </div>
             )}
         </div>
     );
 }
+
+export default Profilescreen;
