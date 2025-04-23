@@ -9,9 +9,18 @@ const paymentRoute = require('./routes/paymentRoute');
 
 const app = express();
 
-// Enhanced CORS Configuration
+// Production CORS Configuration
+const allowedOrigins = [
+  'https://gas-agency-client.vercel.app',    // Your Vercel client URL
+  'https://gas-agency-admin.vercel.app',     // Your Vercel admin URL
+  ...(process.env.NODE_ENV === 'development' ? [
+    'http://localhost:3000',                 // Local client
+    'http://localhost:3001'                  // Local admin
+  ] : [])
+];
+
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3001'],
+  origin: allowedOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
