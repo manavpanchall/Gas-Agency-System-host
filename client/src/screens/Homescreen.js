@@ -20,21 +20,25 @@ function Homescreen() {
         const fetchCylinders = async () => {
             try {
                 const { data } = await axios.get('/api/cylinders/getallcylinders');
+                if (!Array.isArray(data)) {
+                    console.error('Invalid data format:', data);
+                    return []; // Return empty array as fallback
+                }
                 setCylinders(data);
-                setLoading(false);
-            } catch (err) {
-                setError(err.message);
-                setLoading(false);
+            } catch (error) {
+                console.error('Fetch error:', error);
+                setCylinders([]); // Set empty array on error
             }
         };
         fetchCylinders();
     }, []);
 
-    const filteredCylinders = cylinders.filter(cylinder => {
-        const matchesSearch = cylinder.name.toLowerCase().includes(searchKey.toLowerCase());
-        const matchesType = type === 'all' || cylinder.type.toLowerCase() === type.toLowerCase();
-        return matchesSearch && matchesType;
-    });
+    const filteredCylinders = Array.isArray(cylinders)
+        ? cylinders.filter(cylinder => {
+            const matchesSearch = cylinder.name.toLowerCase().includes(searchKey.toLowerCase());
+            const matchesType = type === 'all' || cylinder.type.toLowerCase() === type.toLowerCase();
+            return matchesSearch && matchesType;
+        }) : [];
 
     const handleViewImages = (cylinder) => {
         setSelectedCylinder(cylinder);
@@ -50,9 +54,9 @@ function Homescreen() {
                 </Modal.Header>
                 <Modal.Body className="text-center">
                     {selectedCylinder?.imageurls?.map((image, index) => (
-                        <img 
+                        <img
                             key={index}
-                            src={image} 
+                            src={image}
                             className="img-fluid mb-3 rounded"
                             alt={`${selectedCylinder?.name} - Image ${index + 1}`}
                             style={{ maxHeight: '400px', width: 'auto' }}
@@ -82,17 +86,17 @@ function Homescreen() {
                     </div>
                 </div>
                 <div className="col-md-4">
-                    <button 
+                    <button
                         className="btn btn-outline-primary w-100"
                         onClick={() => setShowFilters(!showFilters)}
                     >
                         <FaFilter className="me-2" />
                         Filters
                     </button>
-                    
+
                     {showFilters && (
                         <div className="mt-2">
-                            <select 
+                            <select
                                 className="form-select"
                                 value={type}
                                 onChange={(e) => setType(e.target.value)}
@@ -117,8 +121,8 @@ function Homescreen() {
                         filteredCylinders.map(cylinder => (
                             <div key={cylinder._id} className="col-md-6 col-lg-4 mb-4">
                                 <div className="card h-100">
-                                    <img 
-                                        src={cylinder.imageurls[0]} 
+                                    <img
+                                        src={cylinder.imageurls[0]}
                                         className="card-img-top"
                                         alt={cylinder.name}
                                         style={{ height: '200px', objectFit: 'cover' }}
@@ -131,13 +135,13 @@ function Homescreen() {
                                             <strong>Price:</strong> ₹{cylinder.price}
                                         </p>
                                         <div className="d-flex gap-2 mt-auto">
-                                            <Link 
+                                            <Link
                                                 to={`/book/${cylinder._id}`}
                                                 className="btn btn-primary flex-grow-1"
                                             >
                                                 Book Now
                                             </Link>
-                                            <button 
+                                            <button
                                                 className="btn btn-outline-primary"
                                                 onClick={() => handleViewImages(cylinder)}
                                                 style={{ minWidth: '40px' }}
@@ -152,7 +156,7 @@ function Homescreen() {
                     ) : (
                         <div className="col-12 text-center py-5">
                             <h4>No cylinders found matching your criteria</h4>
-                            <button 
+                            <button
                                 className="btn btn-link"
                                 onClick={() => {
                                     setSearchKey('');

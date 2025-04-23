@@ -51,6 +51,17 @@ mongoose.connect(process.env.MONGODB_URI)
   process.exit(1);
 });
 
+app.get('/', (req, res) => {
+  res.json({
+    message: "API is running",
+    endpoints: {
+      users: '/api/users',
+      cylinders: '/api/cylinders',
+      bookings: '/api/bookings'
+    }
+  });
+});
+
 // Routes with logging middleware
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path}`);
