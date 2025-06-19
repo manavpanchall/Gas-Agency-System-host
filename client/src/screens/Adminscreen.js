@@ -45,9 +45,7 @@ function Adminscreen() {
 export default Adminscreen;
 
 
-
 // Bookings list component
-
 
 export function Bookings() {
     const [bookings, setBookings] = useState([]);
