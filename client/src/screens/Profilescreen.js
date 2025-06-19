@@ -47,7 +47,6 @@ function MyBookings({ user }) {
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-
     useEffect(() => {
         let isMounted = true;
 
