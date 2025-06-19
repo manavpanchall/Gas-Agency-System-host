@@ -9,6 +9,10 @@ const paymentRoute = require('./routes/paymentRoute');
 
 const app = express();
 
+app.get('/test', (req, res) => {
+  res.send('Server is working!');
+});
+
 // Production CORS Configuration
 const allowedOrigins = [
   'https://gas-agency-client.vercel.app',

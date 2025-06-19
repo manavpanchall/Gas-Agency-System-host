@@ -48,7 +48,6 @@ function AddCylinder() {
             Swal.fire('Oops', 'Something went wrong', 'error');
         }
     }
-
     return (
         <div className="row">
             <div className="col-md-5">
